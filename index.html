@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NetMirror — Browse</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --muted:#bdbdbd;
+      --white:#ffffff;
+      --accent:#E50914;
+      --card:#0f1417;
+      --shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"Inter","Montserrat",system-ui;background:#000;color:var(--white)}
+    header{position:sticky;top:0;background:rgba(0,0,0,0.85);z-index:50}
+    .nav{display:flex;align-items:center;padding:12px 20px;gap:20px}
+    .logo{font-size:22px;font-weight:800;color:var(--accent)}
+    .links a{color:var(--muted);text-decoration:none;font-weight:600;margin-right:12px}
+    .links a:hover{color:var(--white)}
+    .hero{position:relative;margin:0}
+    .hero .bg{height:420px;background-size:cover;background-position:center;filter:brightness(0.55)}
+    .hero .overlay{position:absolute;inset:0;padding:40px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(0deg,rgba(0,0,0,0.8),rgba(0,0,0,0))}
+    .hero h1{font-size:38px;margin:0;font-weight:800}
+    .hero p{max-width:600px;color:var(--muted)}
+    .btn{margin-top:15px;padding:10px 16px;border:0;border-radius:6px;font-weight:700;cursor:pointer}
+    .btn-play{background:var(--white);color:#000}
+    .btn-info{background:rgba(255,255,255,0.15);color:var(--white);margin-left:10px}
+    .row{padding:20px}
+    .row h2{margin:0 0 12px;font-size:20px}
+    .carousel{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+    .card{min-width:180px;height:260px;background:var(--card);border-radius:8px;overflow:hidden;cursor:pointer;flex-shrink:0;transition:transform .2s}
+    .card img{width:100%;height:100%;object-fit:cover}
+    .card:hover{transform:scale(1.07)}
+    footer{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:100}
+    .modal{max-width:900px;width:100%;background:#111;border-radius:10px;overflow:hidden}
+    .modal-head{display:flex;justify-content:space-between;padding:12px 18px;background:#000}
+    .modal-body{padding:18px}
+    .close{background:none;border:0;color:var(--muted);cursor:pointer}
+    iframe{width:100%;height:450px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="logo">NetMirror</div>
+      <div class="links">
+        <a href="#home">Home</a>
+        <a href="#trending">Trending</a>
+        <a href="#mylist">My List</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="home">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="bg" id="heroBg"></div>
+      <div class="overlay">
+        <h1 id="heroTitle"></h1>
+        <p id="heroDesc"></p>
+        <div>
+          <button class="btn btn-play" id="playHero">▶ Play</button>
+          <button class="btn btn-info" id="moreHero">ℹ More Info</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rows -->
+    <section class="row" id="trending">
+      <h2>Trending Now</h2>
+      <div class="carousel" id="trendingRow"></div>
+    </section>
+
+    <section class="row">
+      <h2>Popular Picks</h2>
+      <div class="carousel" id="picksRow"></div>
+    </section>
+
+    <section class="row" id="mylist">
+      <h2>Continue Watching</h2>
+      <div class="carousel" id="continueRow"></div>
+    </section>
+
+    <footer>NetMirror • Demo clone UI with real movie recommendations</footer>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <strong id="modalTitle">Title</strong>
+        <button class="close" id="closeModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="playerFrame" src="" allowfullscreen></iframe>
+        <p id="modalDesc" style="margin-top:10px;color:#aaa"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const movies = [
+      {
+        title:"Inception",
+        year:2010,
+        desc:"A thief who enters the dreams of others to steal secrets gets a chance at redemption.",
+        img:"https://m.media-amazon.com/images/I/51s+Y9D6t6L._AC_.jpg",
+        backdrop:"https://image.tmdb.org/t/p/original/s3TBrRGB1iav7gFOCNx3H31MoES.jpg",
+        trailer:"https://www.youtube.com/embed/YoHD9XEInc0"
+      },
+      {
+        title:"The Dark Knight",
+        year:2008,
+        desc:"Batman battles the Joker, a criminal mastermind who plunges Gotham into chaos.",
+        img:"https://m.media-amazon.com/images/I/51K8ouYrHeL._AC_.jpg",
+        backdrop:"https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+        trailer:"https://www.youtube.com/embed/EXeTwQWrcwY"
+      },
+      {
+        title:"Interstellar",
+        year:2014,
+        desc:"Explorers travel through a wormhole in search of a new habitable planet.",
+        img:"https://m.media-amazon.com/images/I/71niXI3lxlL._AC_SY679_.jpg",
+        backdrop:"https://image.tmdb.org/t/p/original/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg",
+        trailer:"https://www.youtube.com/embed/zSWdZVtXT7E"
+      },
+      {
+        title:"Stranger Things",
+        year:2016,
+        desc:"In the 80s, a group of kids uncover supernatural mysteries in Hawkins, Indiana.",
+        img:"https://m.media-amazon.com/images/I/81+y1JgPawL._AC_SL1500_.jpg",
+        backdrop:"https://image.tmdb.org/t/p/original/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg",
+        trailer:"https://www.youtube.com/embed/mnd7sFt5c3A"
+      },
+      {
+        title:"Breaking Bad",
+        year:2008,
+        desc:"A high school chemistry teacher turned meth kingpin.",
+        img:"https://m.media-amazon.com/images/I/81Mhn3iJGML._AC_SY679_.jpg",
+        backdrop:"https://image.tmdb.org/t/p/original/84XPpjGvxNyExjSuLQe0SzioErt.jpg",
+        trailer:"https://www.youtube.com/embed/HhesaQXLuRY"
+      },
+      {
+        title:"Avengers: Endgame",
+        year:2019,
+        desc:"The Avengers assemble for one last stand against Thanos.",
+        img:"https://m.media-amazon.com/images/I/71niXI3lxlL._AC_SY679_.jpg",
+        backdrop:"https://image.tmdb.org/t/p/original/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+        trailer:"https://www.youtube.com/embed/TcMBFSGVi1c"
+      }
+    ];
+
+    function makeCard(movie){
+      const el = document.createElement('div');
+      el.className='card';
+      el.innerHTML=`<img src="${movie.img}" alt="${movie.title} poster"/>`;
+      el.onclick=()=>openModal(movie);
+      return el;
+    }
+
+    function renderRows(){
+      const trending=document.getElementById('trendingRow');
+      const picks=document.getElementById('picksRow');
+      const cont=document.getElementById('continueRow');
+      movies.forEach(m=>trending.appendChild(makeCard(m)));
+      movies.slice().reverse().forEach(m=>picks.appendChild(makeCard(m)));
+      movies.slice(0,3).forEach(m=>cont.appendChild(makeCard(m)));
+    }
+
+    const hero=document.getElementById('heroBg');
+    const heroTitle=document.getElementById('heroTitle');
+    const heroDesc=document.getElementById('heroDesc');
+    function setHero(movie){
+      hero.style.backgroundImage=`url('${movie.backdrop}')`;
+      heroTitle.textContent=movie.title;
+      heroDesc.textContent=movie.desc;
+      document.getElementById('playHero').onclick=()=>openModal(movie);
+      document.getElementById('moreHero').onclick=()=>openModal(movie);
+    }
+    setHero(movies[0]);
+
+    // Modal
+    const modal=document.getElementById('modal');
+    const player=document.getElementById('playerFrame');
+    const modalTitle=document.getElementById('modalTitle');
+    const modalDesc=document.getElementById('modalDesc');
+    function openModal(movie){
+      modal.style.display='flex';
+      modalTitle.textContent=movie.title;
+      modalDesc.textContent=movie.desc;
+      player.src=movie.trailer+"?autoplay=1";
+    }
+    function closeModal(){
+      modal.style.display='none';
+      player.src="";
+    }
+    document.getElementById('closeModal').onclick=closeModal;
+    modal.onclick=(e)=>{if(e.target===modal)closeModal();}
+
+    renderRows();
+  </script>
+</body>
+</html>
